@@ -10,4 +10,5 @@ HBCI enabled bank accounts using AqBanking as an interface.
 
 ## Features
 
-- Get a list of accounts already configured with AqBanking
+- Get a list of accounts configured with AqBanking
+- Request the current balance of an account
