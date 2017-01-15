@@ -1,3 +1,4 @@
+import csv
 from datetime import datetime
 from decimal import Decimal
 import os
@@ -40,3 +41,35 @@ def request_balance():
                                                '%d.%m.%Y %H:%M'),
                 'amount': Decimal(response[7]),
                 'currency': response[8]}
+
+
+@cache_dir_required
+def request_transactions():
+    run(['aqbanking-cli', '-n',
+         '-P', settings.PINFILE_PATH,
+         'request', '--transactions',
+         '-c', settings.TRANSACTIONS_PATH])
+    stdout = check_output(['aqbanking-cli', 'listtrans',
+                           '-c', settings.TRANSACTIONS_PATH])
+
+    os.remove(settings.TRANSACTIONS_PATH)
+    response = csv.DictReader(stdout.decode(sys.stdout.encoding).splitlines(),
+                              delimiter=';')
+
+    transactions = []
+    for row in response:
+        transactions.append({'date': datetime.strptime(row['date'], '%Y/%m/%d'),
+                             'valuta_date': datetime.strptime(row['valutadate'],
+                                                              '%Y/%m/%d'),
+                             'value_value': Decimal(row['value_value']),
+                             'value_currency': row['value_currency'],
+                             'remote_name': ' '.join([row['remoteName'],
+                                                      row['remoteName1']]),
+                             'remote_account_no': row['remoteAccountNumber'],
+                             'remote_bank_code': row['remoteBankCode'],
+                             'purpose': ''.join([row['purpose'],
+                                                 row['purpose1'],
+                                                 row['purpose2'],
+                                                 row['purpose3'],
+                                                 row['purpose4'],])})
+    return transactions
